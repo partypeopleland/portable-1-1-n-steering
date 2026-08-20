@@ -19,6 +19,8 @@
 
 report／review 是證據，不是自動通過。coordinator 必須核對 workspace、diff、測試、文件與執行期證據。
 
+長任務的 brief 必須設定 progress timing；若未覆寫，worker 須在 5 分鐘內先交 substantive progress，之後至少每 10 分鐘或到達 meaningful milestone，取先到者。
+
 ## 派工提交與 bounded acknowledgement
 
 只有 Herdr 回報目標 agent 已因這份 assignment 進入 `working`，才算 submitted／started。composer 或 history 看得到文字、send API 成功、舊 task 的 spinner 或 pane process 存在，都不是 acknowledgement。
@@ -40,7 +42,13 @@ report／review 是證據，不是自動通過。coordinator 必須核對 worksp
    成功才可記錄 `started`。
 4. 若 timeout，只檢查 pane 一次；若 assignment 仍在 composer，補 exactly one `Enter`，再做最後一次 bounded `working` wait。這是 recovery，不得重送 assignment text。
 5. 第二次 acknowledgement 仍失敗時，結果必須記為 `dispatch_failed`，不可記為 `started`；保持 pane 可見且非 active，清除 stale prompt 或證明 pane 無法啟動前不得重派同一 brief。不得讓 replacement 造成同一 assignment 執行兩次。
-6. 不做 continuous polling、background watcher、transcript loop 或無界 wait。每次 coordinator 自然回合／進度回報或收到 handoff 時，只做一次輕量 liveness audit：若已標籤的 assignment 顯示 `idle`／`done`／`unknown` 卻沒有 submitted completion handoff，視為 anomaly 並檢查一次；不要把 anomaly 變成輪詢。
+6. 不做 completion polling、continuous polling、background watcher、transcript loop、`wait ... idle` 或無界 wait。每次 coordinator 自然回合／進度回報或收到 handoff 時，只做一次輕量 liveness audit：若已標籤的 assignment 顯示 `idle`／`done`／`unknown` 卻沒有 submitted completion handoff，視為 anomaly 並檢查一次；不要把 anomaly 變成輪詢。
+
+## Worker progress
+
+初次 `working` acknowledgement 只證明 worker 已開始，不是完成證明或持續監控。確認後由 worker 主動回報；每次 substantive progress 必須說明目前做什麼、已完成的 evidence、blocker（若有）與下一個 milestone。只有 `OK`／同意／確認等純 acknowledgement 不算 progress。
+
+若錯過 progress deadline，coordinator 只做一次 bounded liveness audit，接著給一次 recovery instruction，或記錄 worker 失敗並重新安排；不得重複 polling、重送同一 assignment 或建立 transcript loop。
 
 ## Worker 完成與 direct handoff
 

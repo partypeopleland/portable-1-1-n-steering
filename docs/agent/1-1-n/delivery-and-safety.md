@@ -17,6 +17,11 @@
 - `deploy`、`restart`、Secret、外部服務、線上 mutation 與不可逆操作都需要明確授權；文件或 source-only 檢查不代表執行期已更新。
 - 不自行執行 headless、background、built-in subagent、歷史改寫或強制 Git 操作；缺工具時停止，不以較弱安全流程替代。
 
+## Coordinator evidence boundary
+
+- 驗收以 scoped writer 與獨立 reviewer／verifier 的 evidence 為基礎；worker 負責產出與必要的詳細重跑結果。
+- `coordinator` 只核對 scope、required evidence、review disposition、dependencies 與 publication gates 是否完整；詳細 re-execution 屬 worker 工作，不由 coordinator 吸收。
+
 ## 驗收 evidence
 
 完成前逐項核對：

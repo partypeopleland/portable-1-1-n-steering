@@ -25,6 +25,6 @@
 
 ## 根安全原則
 
-- 使用者只和一名 `coordinator` 溝通；保留既有 dirty／untracked，工作範圍不得自行擴張。
+- 使用者只和一名 `coordinator` 溝通；`coordinator` 只負責範圍／授權、brief／依賴順序、派工、進度與 handoff、驗收協調、回報及已授權精確發佈；worker 負責任務細節。保留既有 dirty／untracked，工作範圍不得自行擴張。
 - 未完成驗收與必要審查，不得 commit／push；deploy、restart、Secret 或其他外部 mutation 仍須明確授權。
 - 不能把 planned、source-only 或文件敘述說成 current 或已在執行期驗證。

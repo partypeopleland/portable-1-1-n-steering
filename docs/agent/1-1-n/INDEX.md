@@ -4,11 +4,12 @@
 
 ## Responsibility
 
-本 module 定義可攜的 1:1:N 協作：一名 `coordinator` 面向使用者，多名可見、互動式 Herdr worker 提供實作與證據，最後由 coordinator 整合、獨立審查與驗收。它也定義模型選擇、任務檔案、ready-gated dispatch、direct handoff、文件驗收與安全 Git 發佈閘門。
+本 module 定義可攜的 1:1:N 協作：一名 `coordinator` 面向使用者，只做範圍／授權、brief／依賴、派工、進度／交接與驗收協調；多名可見、互動式 Herdr worker 負責任務細節並提供證據，最後由 coordinator 整合、回報與安排後續驗證。它也定義模型選擇、任務檔案、ready-gated dispatch、direct handoff、文件驗收與安全 Git 發佈閘門。
 
 Module 的 Interface 包含這些不變條件：
 
 - 實作、正式文件、設計、測試、非簡單調查與審查都必須先有至少一名可見、互動式 worker；`N = 0` 只適用於本 module 明列的簡單例外。
+- 調查、設計、source／文件編輯、測試、deploy、runtime checks 與詳細 review 的具體工作由 worker 執行；coordinator 不吸收任務細節。
 - worker 是證據來源，不是權威；report／review 不能替代 coordinator 對 workspace、diff、檢查、文件與執行期證據的驗收。
 - 每個任務有 bounded 的 `brief.md`、`report.md`、獨立 `review.md` 與完成標記；派工與交接依 lifecycle 的 ready gate、bounded working acknowledgement 與 at-most-once 規則。
 - 不得使用 built-in subagent、headless CLI、background terminal 或以 commentary 冒充派工。

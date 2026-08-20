@@ -4,10 +4,10 @@
 
 ## 角色
 
-- `coordinator`：唯一面向使用者，負責拆解、派工、整合證據、驗收與回報；不直接取代 writer 或 reviewer。
-- `developer`：在 brief 明列範圍內修改檔案並交付檢查結果。
-- `reviewer`：獨立唯讀檢查需求、標準、變更與證據，只在自己的 task directory 寫 `review.md`。
-- `worker`：在可見、互動式 Herdr pane 執行明確工作；是證據來源，不是權威。
+- `coordinator`：唯一面向使用者，只負責釐清範圍／授權、準備 brief 與依賴順序、派工、接收主動進度與 final handoff、安排獨立驗證／修正、整合結果、回報，以及已授權的精確發佈。
+- `worker`：在可見、互動式 Herdr pane 執行明確工作；負責調查、設計、source／文件編輯、測試、deploy、runtime checks 與詳細 review 等任務細節，交付證據；仍受 brief 與授權限制。
+- `developer`：作為 writer 在 brief 明列範圍內修改檔案並交付檢查結果。
+- `reviewer`：作為獨立 verifier 唯讀檢查需求、標準、變更與證據，只在自己的 task directory 寫 `review.md`。
 
 預設一名 writer、多名唯讀 reviewer。多名 writer 只有在檔案範圍完全分離且 brief 明確授權時才可並行；同一檔案不得有兩名 writer。
 
