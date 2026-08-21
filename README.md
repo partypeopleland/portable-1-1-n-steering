@@ -1,32 +1,48 @@
-# Portable 1:1:N steering
+# 1:1:N / Herdr Collaboration Skill
 
-This repository is a small, self-contained document package for the portable 1:1:N／Herdr collaboration rules. Its local copy helper has no network, state, or version-management logic.
+This repository provides the portable **1:1:N / Herdr Collaboration Skill** for AI coding assistants (such as Antigravity, Claude Code, Codex, and other Agent Skills-compatible harnesses).
 
-## Files
+## What is 1:1:N / Herdr?
 
-- `AGENTS.md` — root instruction entry point.
-- `docs/agent/1-1-n/` — the four linked module documents.
-- `install.sh` — conservative local copy helper.
+A structured multi-agent coordination protocol designed for complex, high-rigor development tasks. It decouples high-level scope/acceptance coordination from deep, visible worker execution:
 
-## Quick Start
+- **1 Coordinator**: The single user-facing agent handling scoping, task briefs, and final acceptance.
+- **N Workers**: Dedicated execution units (developer writers, independent reviewers) running in visible, interactive panes with strict evidence deliverables.
 
-From this checkout, pass an existing workspace directory to the helper:
+## Structure
 
-```sh
-./install.sh /absolute/path/to/workspace
+```text
+herdr-1-1-n/
+├── SKILL.md                          # Main skill entry point with YAML frontmatter & lifecycle
+├── install.sh                        # Installation helper script
+└── references/                       # Detailed sub-protocols (lazy-loaded on demand)
+    ├── roles-and-gates.md            # Roles, model tiers, and N-gate policies
+    ├── lifecycle-and-handoff.md      # Herdr layout, brief/report contracts & dispatch
+    └── delivery-and-safety.md        # Evidence verification & safe Git delivery gates
 ```
 
-The helper accepts exactly one workspace path. It stops if the path is missing or not a directory, or if `AGENTS.md` or any module file already exists. It never overwrites or merges existing content. After a successful copy, restart the Agent session before doing work.
+## Installation
 
-## Manual copy
+### 1. Install to Personal Skills (`~/.agents/skills/`)
 
-The same five files can be copied by hand without running a helper:
+Run without arguments to install directly to `$HOME/.agents/skills/herdr-1-1-n`:
 
 ```sh
-mkdir -p /absolute/path/to/workspace/docs/agent/1-1-n
-cp AGENTS.md /absolute/path/to/workspace/AGENTS.md
-cp docs/agent/1-1-n/INDEX.md /absolute/path/to/workspace/docs/agent/1-1-n/INDEX.md
-cp docs/agent/1-1-n/roles-and-gates.md /absolute/path/to/workspace/docs/agent/1-1-n/roles-and-gates.md
-cp docs/agent/1-1-n/lifecycle-and-handoff.md /absolute/path/to/workspace/docs/agent/1-1-n/lifecycle-and-handoff.md
-cp docs/agent/1-1-n/delivery-and-safety.md /absolute/path/to/workspace/docs/agent/1-1-n/delivery-and-safety.md
+./install.sh
 ```
+
+### 2. Install to a Specific Workspace
+
+Pass the workspace path to install locally into `<workspace>/.agents/skills/herdr-1-1-n`:
+
+```sh
+./install.sh /path/to/workspace
+```
+
+## How to Trigger
+
+The skill is model-invoked on-demand and triggers when:
+- The user explicitly mentions `1:1:N`, `1-1-n`, `Herdr`, or `多 Agent 派工`.
+- The user requests complex multi-agent dispatch with formal brief/report/review and delivery gates.
+
+Routine tasks (simple edits, single-command checks, `git commit`) will **not** trigger this skill, ensuring fast and lean execution for everyday tasks.
