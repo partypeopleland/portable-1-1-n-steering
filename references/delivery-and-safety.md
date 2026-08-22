@@ -7,6 +7,7 @@
 - `AGENTS.md` 與 module INDEX 只放治理、Interface 與路由；方案、架構、流程與術語正文只放在一個 canonical home。
 - 正式文件由 writer 草擬，coordinator 查證，獨立 reviewer 唯讀複核。重要敘述要能追溯到程式、設定、測試、執行期證據或已接受決策；清楚標示 `current`、`planned`、`historical`、`runtime unknown`。
 - 受影響的程式、設定、CLI、部署流程或穩定架構變更，要檢查相應的 `AGENTS.md`、唯一事實來源與文件同步；不能只寫「文件未變更」。
+- `templates/core.md.tmpl` 是 lifecycle／safety／handoff／acceptance 的唯一 reusable prose home；`profiles/*.json` 只放角色 defaults 與 profile-specific fields。`templates/metadata-contract.json` 定義欄位與 placeholder，不把 transient task data 寫進 canonical skill。
 - 不寫 Secret、credential、個資、一次性錯誤或未查證的永久設計；掃描路徑、術語、命令、Markdown links 與跨文件一致性。
 - 舊入口可以是 wrapper，但只能轉接到 canonical home；不能在 wrapper 保留會漂移的 active rule。
 
@@ -16,6 +17,13 @@
 - 保留既有 dirty／untracked，精確處理 brief 列出的檔案；若 dirty overlap、範圍不明、檢查失敗或來源衝突，停止並回報。
 - `deploy`、`restart`、Secret、外部服務、線上 mutation 與不可逆操作都需要明確授權；文件或 source-only 檢查不代表執行期已更新。
 - 不自行執行 headless、background、built-in subagent、歷史改寫或強制 Git 操作；缺工具時停止，不以較弱安全流程替代。
+
+## Artifact-first direct handoff
+
+- Worker 先在 artifact 同一目錄建立 temp 檔，寫入完整 report/review、命令結果、限制與 completion marker，再 atomic rename 至正式 path。
+- Native recognized agent 的唯一預設交接 seam 是 `herdr agent prompt <coordinator-name-or-pane-id> "..."`；訊息只含 task ID、精確 artifact path、marker 與請 coordinator acceptance 的指示。
+- 不使用 completion polling、transcript loop、background watcher、第二次 Enter 或 blind resend。`herdr pane send-text`／`send-keys Enter` 只可作明確標記的 raw-terminal compatibility fallback。
+- Native handoff 失敗必須在 artifact 如實記錄，不能聲稱 coordinator 已收到；worker 停止發 work 且不得 close／操作 pane，讓 coordinator 做一次 bounded liveness check 後決定安全 close/recovery。確認舊 turn 不再執行且沒有未提交 tool operation 後，coordinator 以 `herdr pane close <pane-id>`（或當前等價命令）關閉 completed worker CLI/pane；完成 pane 預設不保留為 idle，重用只適用於未完成或已安全 reset 的 context。
 
 ## Coordinator evidence boundary
 

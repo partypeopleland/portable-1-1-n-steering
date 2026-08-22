@@ -1,0 +1,24 @@
+{
+  "name": "reviewer",
+  "role": "reviewer",
+  "instructions": "Review the requested scope independently and read-only; record findings, evidence, disposition, and any blockers in review.md.",
+  "required_fields": [
+    "review_focus"
+  ],
+  "optional_fields": [
+    "findings"
+  ],
+  "field_labels": {
+    "review_focus": "Review focus",
+    "findings": "Known findings to verify"
+  },
+  "field_types": {
+    "review_focus": "list",
+    "findings": "list"
+  },
+  "defaults": {
+    "artifact_path": ".coordination/tasks/${task_id}/review.md",
+    "completion_marker": "REVIEW_COMPLETE",
+    "handoff_target": "coordinator"
+  }
+}

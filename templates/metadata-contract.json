@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "description": "Strict metadata contract for rendering a reusable Herdr task brief.",
+  "required": {
+    "task_id": "path-safe identifier: letters, digits, '.', '_' and '-'; no separators",
+    "profile": "one of the JSON profiles installed under profiles/",
+    "objective": "non-empty single-line task objective",
+    "workspace": "object containing repo and optional cwd",
+    "role": "must match the selected profile role",
+    "sources": "non-empty list of source descriptions",
+    "scope": "non-empty list of repository-relative paths",
+    "exclusions": "non-empty list of excluded work",
+    "allowed_mutations": "non-empty list of authorized mutations",
+    "checks": "non-empty list of commands or checks",
+    "profile_fields": "object containing the selected profile's required fields"
+  },
+  "defaulted_by_profile": {
+    "artifact_path": "repository-relative path; ${task_id} is the only allowed placeholder",
+    "completion_marker": "uppercase completion marker",
+    "handoff_target": "stable agent name or pane id"
+  },
+  "optional": {
+    "workspace.cwd": "single-line working-directory description; defaults to repository root",
+    "notes": "single-line text or list",
+    "acceptance": "list or single-line text",
+    "progress_timing": "single-line progress expectation"
+  },
+  "placeholders": {
+    "task_id": "normalized task identifier",
+    "profile": "selected profile name",
+    "objective": "task objective",
+    "role": "profile role",
+    "workspace_repo": "workspace.repo",
+    "workspace_cwd": "workspace.cwd",
+    "sources_block": "formatted sources",
+    "scope_block": "formatted scope",
+    "exclusions_block": "formatted exclusions",
+    "allowed_mutations_block": "formatted allowed mutations",
+    "checks_block": "formatted checks",
+    "artifact_path": "resolved repository-relative artifact path",
+    "completion_marker": "resolved completion marker",
+    "handoff_target": "resolved handoff target",
+    "profile_instructions": "profile-provided instructions",
+    "profile_fields_block": "profile-specific metadata fields",
+    "notes": "formatted notes",
+    "acceptance_block": "formatted acceptance criteria",
+    "progress_timing": "progress expectation"
+  },
+  "path_rules": [
+    "task_id and artifact_path must not contain absolute paths, '\\', '.', '..', or empty segments",
+    "artifact_path may contain only the ${task_id} placeholder and is resolved before rendering",
+    "credential-like values, private keys, token forms, and URL userinfo are rejected"
+  ],
+  "profile_specific": {
+    "developer": {
+      "required": ["changes"],
+      "optional": ["implementation_notes"]
+    },
+    "reviewer": {
+      "required": ["review_focus"],
+      "optional": ["findings"]
+    },
+    "investigation": {
+      "required": ["questions"],
+      "optional": ["hypotheses"]
+    },
+    "design": {
+      "required": ["decisions"],
+      "optional": ["alternatives"]
+    }
+  }
+}

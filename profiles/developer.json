@@ -1,0 +1,24 @@
+{
+  "name": "developer",
+  "role": "developer",
+  "instructions": "Implement only the authorized change, add or update focused tests, and record concrete diff and check evidence in report.md.",
+  "required_fields": [
+    "changes"
+  ],
+  "optional_fields": [
+    "implementation_notes"
+  ],
+  "field_labels": {
+    "changes": "Planned implementation",
+    "implementation_notes": "Implementation notes"
+  },
+  "field_types": {
+    "changes": "list",
+    "implementation_notes": "list"
+  },
+  "defaults": {
+    "artifact_path": ".coordination/tasks/${task_id}/report.md",
+    "completion_marker": "WRITER_COMPLETE",
+    "handoff_target": "coordinator"
+  }
+}

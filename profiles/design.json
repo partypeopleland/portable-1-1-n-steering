@@ -1,0 +1,24 @@
+{
+  "name": "design",
+  "role": "design",
+  "instructions": "Develop a traceable design within the authorized boundary; compare meaningful alternatives and record accepted decisions in report.md.",
+  "required_fields": [
+    "decisions"
+  ],
+  "optional_fields": [
+    "alternatives"
+  ],
+  "field_labels": {
+    "decisions": "Design decisions",
+    "alternatives": "Alternatives considered"
+  },
+  "field_types": {
+    "decisions": "list",
+    "alternatives": "list"
+  },
+  "defaults": {
+    "artifact_path": ".coordination/tasks/${task_id}/report.md",
+    "completion_marker": "DESIGN_COMPLETE",
+    "handoff_target": "coordinator"
+  }
+}

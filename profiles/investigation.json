@@ -1,0 +1,24 @@
+{
+  "name": "investigation",
+  "role": "investigation",
+  "instructions": "Investigate the authorized questions without making unapproved mutations; preserve source attribution, uncertainty, and reproducible evidence in report.md.",
+  "required_fields": [
+    "questions"
+  ],
+  "optional_fields": [
+    "hypotheses"
+  ],
+  "field_labels": {
+    "questions": "Investigation questions",
+    "hypotheses": "Hypotheses to test"
+  },
+  "field_types": {
+    "questions": "list",
+    "hypotheses": "list"
+  },
+  "defaults": {
+    "artifact_path": ".coordination/tasks/${task_id}/report.md",
+    "completion_marker": "INVESTIGATION_COMPLETE",
+    "handoff_target": "coordinator"
+  }
+}

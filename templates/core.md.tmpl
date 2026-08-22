@@ -1,0 +1,139 @@
+# Task brief: ${objective}
+
+## Identification and authorization
+
+- Task ID: `${task_id}`
+- Profile: `${profile}`
+- Role: `${role}`
+- Workspace/repository: `${workspace_repo}`
+- Working directory: `${workspace_cwd}`
+- This rendered brief is the sole execution authorization. Preserve unrelated
+  dirty or untracked work and stop if the requested scope overlaps it.
+
+## Objective
+
+${objective}
+
+## Sources of truth
+
+${sources_block}
+
+Claims must remain traceable to the listed sources, source code, configuration,
+tests, runtime evidence, or an accepted decision. Mark facts as current,
+planned, historical, or runtime unknown when that distinction matters.
+
+## Exact scope
+
+${scope_block}
+
+## Exclusions
+
+${exclusions_block}
+
+## Allowed mutations
+
+${allowed_mutations_block}
+
+Do not expand this authorization because a search, test, dependency, or worker
+discovery suggests additional work. Deploys, restarts, secrets, external
+services, and irreversible operations require explicit authorization.
+
+## Herdr dispatch and readiness contract
+
+### Prefer the native agent seam
+
+- For a recognized live agent, use `herdr agent prompt <agent-name-or-pane-id> "..."`.
+  This is the atomic text-plus-Enter prompt seam and is the default dispatch and
+  handoff mechanism.
+- Give a live agent a stable target with `herdr agent rename <target> <name>`.
+  `herdr pane rename` changes only a display label; it does not create a native
+  agent identity.
+- For a new ready shell whose readiness is reliable, use
+  `herdr agent start <name> --kind <kind> --pane <id>`, then prompt the named
+  agent through the native seam.
+- For an ordinary shell or process, use `herdr pane run <pane-id> <command>...`.
+  Raw `herdr pane send-text` followed by `herdr pane send-keys ... Enter` is
+  only a clearly marked compatibility/raw-terminal fallback, never the default
+  recognized-agent handoff.
+
+### Startup recovery and trust
+
+- If first-run bootstrap auto-updates and exits after a misleading ready signal,
+  classify the target as `startup_failed`; do not prompt the stale target. Allow
+  the update to finish and perform one bounded clean restart. If native startup
+  remains unavailable, launch the CLI from a fresh shell with atomic
+  `herdr pane run` and rely on proactive artifact handoff rather than coordinator
+  polling.
+- If Codex blocks before reading this brief and asks whether to trust the working
+  directory, classify the target as `blocked`, never `working`. Verify the exact
+  cwd, expected Git remote, branch, and task scope first. Approve trust only for
+  the explicitly authorized workspace; otherwise stop and report the blocker.
+  Never blindly answer an arbitrary approval prompt.
+
+### Safe context reuse
+
+- Before reusing a sub-panel CLI, determine its prior context and whether `/new`
+  is safely supported. Reset only a safely completed context, then wait for fresh
+  readiness before assigning work.
+- If reset is not safe, close only a completed pane when it is safe to do so and
+  create or start a fresh pane. Never assign work while an old turn may still be
+  running. This preserves context/token isolation and at-most-once execution.
+
+### Completed worker cleanup
+
+- After atomically writing `report.md` or `review.md`, sending exactly one
+  native completion handoff, and stopping work, the worker must not close,
+  manipulate, or reuse its pane. A worker also must not open a subagent,
+  background agent, watcher, second CLI, extra pane/tab, headless task, or
+  self-dispatch path.
+- The coordinator performs exactly one bounded liveness check. Only after it
+  confirms that the old turn cannot still run or hold an uncommitted tool
+  operation does the coordinator close the completed worker CLI/pane with
+  `herdr pane close <pane-id>` (or the current equivalent) to release memory.
+- Completed subtasks are closed by default, not retained as idle panes. Reuse
+  is allowed only for an unfinished or safely reset context under a new
+  coordinator dispatch. If handoff fails, record the failure and let the
+  coordinator choose safe close/recovery; do not resend or leave a watcher.
+
+## Profile instructions
+
+${profile_instructions}
+
+${profile_fields_block}
+
+## Progress and evidence
+
+${progress_timing}
+
+Record the commands run, their results, changed files, limitations, and any
+runtime or external operation that was not performed. Do not describe source-only
+or offline evidence as deployed or runtime verified.
+
+## Checks
+
+${checks_block}
+
+## Acceptance
+
+${acceptance_block}
+
+The coordinator must independently verify scope, diff, checks, documentation
+synchronization, sensitive-information safety, and any required runtime evidence.
+Worker completion is not coordinator acceptance.
+
+## Artifact-first completion and handoff
+
+- Write the required artifact to `${artifact_path}`. Prefer a temporary file in
+  the same directory, validate it, and atomically rename it into place.
+- Finish the artifact with the exact marker `${completion_marker}`.
+- After the artifact and marker are complete, send exactly one short native prompt
+  to `${handoff_target}`:
+  `Task ${task_id}: artifact ${artifact_path}; marker ${completion_marker}.
+  Please continue coordinator acceptance.`
+- Do not poll for completion, inspect a transcript in a loop, run a background
+  watcher, send a second Enter, or blindly resend the handoff. If the handoff
+  fails, record that fact in the artifact and make no delivery claim.
+
+## Completion marker
+
+`${completion_marker}`

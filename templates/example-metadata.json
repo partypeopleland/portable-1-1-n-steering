@@ -1,0 +1,47 @@
+{
+  "task_id": "example-template-task",
+  "profile": "developer",
+  "objective": "Add a small, tested parser to the approved module.",
+  "workspace": {
+    "repo": "example-org/example-project",
+    "cwd": "repository root"
+  },
+  "role": "developer",
+  "sources": [
+    "approved product brief",
+    "canonical module documentation"
+  ],
+  "scope": [
+    "src/parser.py",
+    "tests/test_parser.py"
+  ],
+  "exclusions": [
+    "unrelated modules",
+    "credentials and deployment state"
+  ],
+  "allowed_mutations": [
+    "edit the listed source and test files"
+  ],
+  "checks": [
+    "python3 -m unittest discover -s tests"
+  ],
+  "profile_fields": {
+    "changes": [
+      "Implement the parser seam.",
+      "Add deterministic unit coverage."
+    ],
+    "implementation_notes": [
+      "Keep the public interface small."
+    ]
+  },
+  "notes": [
+    "This example contains no environment-specific paths or credentials."
+  ],
+  "acceptance": [
+    "Coordinator verifies the scoped diff and test evidence."
+  ],
+  "progress_timing": "Report the first substantive milestone within five minutes.",
+  "artifact_path": ".coordination/tasks/${task_id}/report.md",
+  "completion_marker": "WRITER_COMPLETE",
+  "handoff_target": "coordinator"
+}

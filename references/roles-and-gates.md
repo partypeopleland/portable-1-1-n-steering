@@ -26,9 +26,18 @@
 
 ## Brief 與模型
 
-開始前 brief 至少要寫：目標、角色、唯一 writer、workspace-relative task path、範圍與排除、唯一事實來源、限制、驗收、檢查、完成標記與交接對象。缺 brief 或欄位不足時停止。
+開始前 brief 至少要寫：目標、角色、唯一 writer、workspace-relative task path、範圍與排除、唯一事實來源、限制、驗收、檢查、完成標記與交接對象。缺 brief 或欄位不足時停止。Reusable renderer 的 metadata contract 位於 `templates/metadata-contract.json`；實際 rendered `brief.md` 才是 task authorization。
 
 模型選擇採成本優先：一般工作優先 `gpt-5.6-luna / max / fast`。`coordinator` 可依複雜度、風險與預期價值選更高階模型，但必須在 brief 簡述偏離預設的理由。若使用 `gpt-5.6-sol`，最高只能 `medium / fast`，不得使用 `high`、`max` 或 `xhigh`。
+
+## Dispatch、startup 與 context 閘門
+
+- 已辨識的 live agent 一律優先使用 atomic `herdr agent prompt <agent-name-or-pane-id> "..."`；以 `herdr agent rename <target> <name>` 固定 native target。`herdr pane rename` 只改顯示 label。
+- 新 ready shell 只有在 readiness 可靠時才使用 `herdr agent start <name> --kind <kind> --pane <id>`。first-run auto-update 後退出是 `startup_failed`，不得 prompt stale target；更新完成後只准一次 bounded clean restart，仍失敗才從 fresh shell 用 `herdr pane run` fallback。
+- ordinary shell/process 可用 `herdr pane run <pane-id> <command>...`。raw `pane send-text` + `send-keys Enter` 只屬明確標記的 compatibility fallback，不是 recognized agent handoff。
+- Codex 在讀 brief 前的 trust cwd prompt 是 `blocked`，不是 `working`；先核對 exact cwd、remote、branch、scope，只對明確授權 workspace 放行，禁止盲答 approval。
+- reuse 前必須判斷 prior context、舊 turn 是否已完成與 `/new` 是否安全。只 reset 安全完成的 context 並等待 fresh readiness，否則由 coordinator 在一次 bounded liveness check 確認安全後 close 已完成 pane，再建立 fresh pane；不得讓舊 turn 與新 assignment 重疊。Worker 不得自行 close 或操作 pane。
+- Worker boundary 是硬閘門：worker 只能使用 assigned pane 與 foreground commands，不得開 subagent、background agent、watcher、second CLI、extra pane/tab、headless task 或 self-dispatch path。完成 task 的 pane 預設由 coordinator 關閉，不保留 idle 供重用。
 
 ## 範圍與安全停點
 
