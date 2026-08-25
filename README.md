@@ -19,19 +19,45 @@
 herdr agent prompt <agent-name-or-pane-id> "<assignment>"
 ```
 
+### 「跨視窗交接資訊」transport contract
+
+「跨視窗交接資訊」包括 coordinator-to-worker assignments、worker-to-coordinator completion handoffs，以及 coordinator-to-worker correction/review handoffs。若目標是
+ordinary interactive pane，三類資訊都必須各用一次 atomic seam：
+
+```text
+herdr pane run <target-pane> "<message>"
+```
+
+這個 quoted-message 形式是把資訊送入已存在 pane 的交接 transport，不是 shell／CLI
+startup，也不代表 readiness、working、completion 或 runtime verification。shell/process
+startup 仍使用 `herdr pane run <pane-id> <command>...` 的 command 形式，兩者不得混用。
+若目標是真正已被 Herdr 辨識且仍可用的 live agent，保留
+`herdr agent prompt <agent-name-or-pane-id> "<message>"` 作 recognized-agent seam。
+普通 pane 使用者不得以 `pane send-text` 加 `pane send-keys ... Enter` 作正常路徑；raw
+split 只在下述 compatibility recovery 條件下出現。
+
+Compatibility recovery only：只有 atomic `pane run` 與 native `agent prompt` 都不可用時，
+才可對 ordinary pane 以 raw `herdr pane send-text ...` 加
+`herdr pane send-keys ... Enter` 嘗試一次。split pair 必須 at-most-once，並在
+artifact/report 記錄失敗；不得靜默把 composer 視為已提交、補第二次 Enter、重送或宣稱
+runtime 已驗證。
+
 用 `herdr agent rename <target> <stable-name>` 建立 native 穩定名稱；`herdr pane rename` 只改 display label。新 ready shell 只有在 readiness 可靠時才使用：
 
 ```text
 herdr agent start <name> --kind <kind> --pane <id>
 ```
 
-若 first-run bootstrap 自動更新後退出，分類為 `startup_failed`，不要 prompt stale target；讓更新完成後只做一次 bounded clean restart。Native startup 仍不可用時，才從 fresh shell 用 ordinary-process fallback：
+若 first-run bootstrap 自動更新後退出，分類為 `startup_failed`，不要 prompt stale target；讓更新完成後只做一次 bounded clean restart。Native startup 仍不可用時，才從 fresh shell 用 ordinary-process startup form：
 
 ```text
 herdr pane run <pane-id> <command>...
 ```
 
-Codex 在讀取 brief 前的 trust cwd prompt 是 `blocked`，不是 `working`；先核對 exact cwd、預期 Git remote、branch 與 task scope。Artifact 必須先以 temp + atomic rename 完成，再對 coordinator 發送一次 native prompt；不 completion polling、transcript loop、background watcher、第二次 Enter 或 blind resend。完整規則見 [`references/lifecycle-and-handoff.md`](references/lifecycle-and-handoff.md)。
+這個 startup command form 與上面的 ordinary-pane handoff form 不同；不要把 startup
+command 當成交接完成或 runtime evidence。
+
+Codex 在讀取 brief 前的 trust cwd prompt 是 `blocked`，不是 `working`；先核對 exact cwd、預期 Git remote、branch 與 task scope。Artifact 必須先以 temp + atomic rename 完成，再依目標對 coordinator 發送一次 native prompt 或 ordinary-pane atomic `pane run`；不 completion polling、transcript loop、background watcher、第二次 Enter 或 blind resend。完整規則見 [`references/lifecycle-and-handoff.md`](references/lifecycle-and-handoff.md)。
 
 Worker 完成 `report.md`／`review.md`、發送一次 handoff 並停止後，不得關閉或操作自己的 pane。Coordinator 只做一次 bounded liveness check；確認舊 turn 已停止且沒有未提交 tool operation，才用 `herdr pane close <pane-id>`（或當前等價命令）關閉 completed worker CLI/pane。完成 pane 預設關閉，不保留 idle；重用只適用於未完成或已安全 reset 的 context。handoff 失敗要記錄並由 coordinator 決定安全 close/recovery，不重送或留下 watcher。Worker 不得開 subagent、background agent、watcher、second CLI、extra pane/tab、headless task 或 self-dispatch path。
 

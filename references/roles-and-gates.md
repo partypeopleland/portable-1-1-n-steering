@@ -33,8 +33,9 @@
 ## Dispatch、startup 與 context 閘門
 
 - 已辨識的 live agent 一律優先使用 atomic `herdr agent prompt <agent-name-or-pane-id> "..."`；以 `herdr agent rename <target> <name>` 固定 native target。`herdr pane rename` 只改顯示 label。
-- 新 ready shell 只有在 readiness 可靠時才使用 `herdr agent start <name> --kind <kind> --pane <id>`。first-run auto-update 後退出是 `startup_failed`，不得 prompt stale target；更新完成後只准一次 bounded clean restart，仍失敗才從 fresh shell 用 `herdr pane run` fallback。
-- ordinary shell/process 可用 `herdr pane run <pane-id> <command>...`。raw `pane send-text` + `send-keys Enter` 只屬明確標記的 compatibility fallback，不是 recognized agent handoff。
+- 「跨視窗交接資訊」包括 coordinator-to-worker assignments、worker-to-coordinator completion handoffs，以及 coordinator-to-worker correction/review handoffs；ordinary interactive pane 的三類資訊一律各用一次 atomic `herdr pane run <target-pane> "<message>"`，真正已辨識且可用的 live agent 則用 native `herdr agent prompt`。
+- 上述 pane handoff 的 quoted-message 形式只處理已存在 pane 的交接，不是 shell startup，也不是 runtime verification；新 ready shell 只有在 readiness 可靠時才使用 `herdr agent start <name> --kind <kind> --pane <id>`。first-run auto-update 後退出是 `startup_failed`，不得 prompt stale target；更新完成後只准一次 bounded clean restart，仍失敗才從 fresh shell 用 `herdr pane run <pane-id> <command>...` 啟動 process。
+- ordinary shell/process startup 與 ordinary-pane handoff 是兩種不同的 `pane run` 形式。普通 pane 使用者不得把 `pane send-text` + `send-keys Enter` 當正常路徑；只有 atomic/native seam 都不可用時，才可明確標記 compatibility recovery、以 raw split pair at-most-once 嘗試，並在 artifact/report 記錄失敗，不得補第二次 Enter、重送或宣稱 runtime 已驗證。
 - Codex 在讀 brief 前的 trust cwd prompt 是 `blocked`，不是 `working`；先核對 exact cwd、remote、branch、scope，只對明確授權 workspace 放行，禁止盲答 approval。
 - reuse 前必須判斷 prior context、舊 turn 是否已完成與 `/new` 是否安全。只 reset 安全完成的 context 並等待 fresh readiness，否則由 coordinator 在一次 bounded liveness check 確認安全後 close 已完成 pane，再建立 fresh pane；不得讓舊 turn 與新 assignment 重疊。Worker 不得自行 close 或操作 pane。
 - Worker boundary 是硬閘門：worker 只能使用 assigned pane 與 foreground commands，不得開 subagent、background agent、watcher、second CLI、extra pane/tab、headless task 或 self-dispatch path。完成 task 的 pane 預設由 coordinator 關閉，不保留 idle 供重用。

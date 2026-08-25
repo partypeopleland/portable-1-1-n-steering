@@ -22,6 +22,33 @@
 
 長任務的 brief 必須設定 progress timing；若未覆寫，worker 須在 5 分鐘內先交 substantive progress，之後至少每 10 分鐘或到達 meaningful milestone，取先到者。
 
+## 跨視窗交接資訊（Cross-window handoff information）
+
+「跨視窗交接資訊」明確包括三類訊息：coordinator-to-worker assignments、worker-to-coordinator completion handoffs，以及 coordinator-to-worker correction/review handoffs。
+
+當目標是 ordinary interactive pane 時，三類資訊每一項都使用一次 atomic
+ordinary-pane seam：
+
+```text
+herdr pane run <target-pane> "<message>"
+```
+
+這個 quoted-message 形式只負責把交接資訊送入已存在的 ordinary interactive pane；它
+不是 shell／CLI startup，也不是 readiness、working、completion 或 runtime verification
+的證據。啟動 shell/process 仍另使用下方 startup recovery 的
+`herdr pane run <pane-id> <command>...` command form，兩者不得混用或互相當作證據。
+
+若目標是真正已被 Herdr 辨識且仍可用的 live agent，保留
+`herdr agent prompt <agent-name-or-pane-id> "<message>"` 作 recognized-agent atomic
+seam。普通 pane 使用者不得把 `pane send-text` 加 `pane send-keys ... Enter` 當正常路徑；raw
+split 只在下述 compatibility recovery 條件下出現。
+
+Compatibility recovery only：只有 atomic `pane run` 與 native `agent prompt` 都不可用時，
+才可對 ordinary pane 以 raw `herdr pane send-text ...` 加
+`herdr pane send-keys ... Enter` 嘗試一次。這個 split pair 必須 at-most-once，並在
+artifact/report 記錄失敗；不得靜默把 composer 內容視為已提交、補第二次 Enter、重送或
+宣稱 runtime 已驗證。
+
 ## Native dispatch 與 bounded startup
 
 ### 已辨識的 live agent
@@ -60,7 +87,8 @@ herdr agent start <name> --kind <kind> --pane <id>
 herdr pane run <pane-id> <command>...
 ```
 
-這是 shell/process fallback；worker 仍以 report/review artifact 主動交接，coordinator 不靠 polling 補救缺少的 native handoff。
+這是 shell/process startup form，不是上方的 ordinary-pane handoff seam；worker 仍依目標
+以 report/review artifact 主動交接，coordinator 不靠 polling 補救缺少的 native handoff。
 
 ### Startup trust gate
 
@@ -78,7 +106,7 @@ Pane reuse 不是單純看到 `idle` 就能重派。先判斷：
 
 ## Completed worker pane cleanup
 
-Worker 的資源生命週期在 artifact 與 handoff 完成後停止：worker 寫好並 atomic rename `report.md`／`review.md`、發送一次 native completion handoff，接著不再發 work，也不得關閉、操作或重用自己的 pane。Worker 也不得開 subagent、background agent、watcher、second CLI、extra pane/tab、headless task 或 self-dispatch path。
+Worker 的資源生命週期在 artifact 與 handoff 完成後停止：worker 寫好並 atomic rename `report.md`／`review.md`、發送一次 applicable atomic completion handoff（依目標選擇 recognized live agent 的 `herdr agent prompt` 或 ordinary interactive pane 的 `herdr pane run <target-pane> "<message>"`），接著不再發 work，也不得關閉、操作或重用自己的 pane。Worker 也不得開 subagent、background agent、watcher、second CLI、extra pane/tab、headless task 或 self-dispatch path。
 
 Coordinator 在收到 handoff 後只做一次 bounded liveness check。若確認舊 turn 不再執行、不持有未提交的 tool operation，才由 coordinator 執行：
 
@@ -102,15 +130,22 @@ Worker 必須先把 artifact 寫好並完成 marker，再 handoff：
 1. 在 artifact 同一目錄建立 temp 檔。
 2. 寫入完整 `report.md`／`review.md`、檢查內容與 marker。
 3. 以 atomic rename 取代正式 artifact path。
-4. 解析名稱或標籤為 `coordinator` 的 live agent，發送**一次**短 native prompt，例如：
+4. 若 `coordinator` 是真正已辨識且可用的 live agent，發送**一次**短 native prompt；若
+   目標只是 ordinary interactive pane，改用**一次** atomic pane handoff，例如：
 
    ```text
-   herdr agent prompt coordinator "Task <task-id>: artifact <exact-path>; marker <MARKER>. Please continue coordinator acceptance."
+   herdr pane run <target-pane> "Task <task-id>: artifact <exact-path>; marker <MARKER>. Please continue coordinator acceptance."
    ```
 
-這個 prompt 不使用 `--wait`，也不再補 Enter。成功 API write 不是 coordinator 已讀取的證明，因此不要查詢回覆、輪詢、重送文字或建立 acknowledgement loop。若 native handoff 失敗，在 artifact 如實記錄失敗；最多發一次可見人類通知，不得宣稱 coordinator 已收到。
+Native prompt 不使用 `--wait`，也不再補 Enter；pane handoff 也只送一次。任一成功 API
+write 都不是 coordinator 已讀取、worker 已處理或 runtime 已驗證的證明，因此不要查詢回覆、
+輪詢、重送文字或建立 acknowledgement loop。若選定的 atomic seam 失敗，在 artifact
+如實記錄失敗；不得改用第二次 Enter 或靜默宣稱 coordinator 已收到。
 
-`herdr pane send-text` 加 `herdr pane send-keys ... Enter` 僅能作為清楚標記的 compatibility/raw-terminal fallback；若 brief 沒有特別授權，不得用它取代 recognized live agent 的 `herdr agent prompt`。
+`herdr pane send-text` 加 `herdr pane send-keys ... Enter` 僅能作為清楚標記的
+compatibility/raw-terminal recovery；只有 atomic/native seam 不可用時才可 at-most-once
+嘗試，並須記錄失敗。它不是 ordinary pane 的正常路徑，也不得取代可用的
+`herdr agent prompt` 或 `herdr pane run <target-pane> "<message>"`。
 
 ## Coordinator acceptance
 

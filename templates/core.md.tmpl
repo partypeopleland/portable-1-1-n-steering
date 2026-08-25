@@ -40,30 +40,43 @@ services, and irreversible operations require explicit authorization.
 
 ## Herdr dispatch and readiness contract
 
-### Prefer the native agent seam
+### Cross-window handoff information
 
-- For a recognized live agent, use `herdr agent prompt <agent-name-or-pane-id> "..."`.
-  This is the atomic text-plus-Enter prompt seam and is the default dispatch and
-  handoff mechanism.
-- Give a live agent a stable target with `herdr agent rename <target> <name>`.
-  `herdr pane rename` changes only a display label; it does not create a native
-  agent identity.
+"Cross-window handoff information" includes coordinator-to-worker assignments,
+worker-to-coordinator completion handoffs, and coordinator-to-worker
+correction/review handoffs.
+
+- For an ordinary interactive pane, each of the three message classes uses exactly one
+  atomic `herdr pane run <target-pane> "<message>"` handoff.
+- The quoted-message form submits handoff information to an existing pane; it
+  is not shell/CLI startup and is not evidence of readiness, working, completion,
+  or runtime verification. Shell/process startup uses the separate
+  `herdr pane run <pane-id> <command>...` form. Do not confuse the two forms.
+- For a genuinely recognized and available live agent, preserve the native
+  atomic seam `herdr agent prompt <agent-name-or-pane-id> "<message>"`.
+  Ordinary-pane users must not use `pane send-text` plus `pane send-keys ...
+  Enter` as the normal path.
+- Only when both atomic `pane run` and native `agent prompt` are unavailable may
+  an explicitly marked compatibility recovery try an ordinary-pane raw
+  `herdr pane send-text ...` plus `herdr pane send-keys ... Enter` split pair.
+  Attempt that pair at most once, record failure in the artifact/report, and do
+  not silently treat composer contents as submitted, add a second Enter, resend,
+  or claim runtime verification.
+
+### Native startup, recovery, and trust
+
+- Give a recognized live agent a stable target with
+  `herdr agent rename <target> <name>`. `herdr pane rename` changes only a
+  display label; it does not create a native agent identity.
 - For a new ready shell whose readiness is reliable, use
   `herdr agent start <name> --kind <kind> --pane <id>`, then prompt the named
   agent through the native seam.
-- For an ordinary shell or process, use `herdr pane run <pane-id> <command>...`.
-  Raw `herdr pane send-text` followed by `herdr pane send-keys ... Enter` is
-  only a clearly marked compatibility/raw-terminal fallback, never the default
-  recognized-agent handoff.
-
-### Startup recovery and trust
-
 - If first-run bootstrap auto-updates and exits after a misleading ready signal,
   classify the target as `startup_failed`; do not prompt the stale target. Allow
   the update to finish and perform one bounded clean restart. If native startup
-  remains unavailable, launch the CLI from a fresh shell with atomic
-  `herdr pane run` and rely on proactive artifact handoff rather than coordinator
-  polling.
+  remains unavailable, launch the CLI from a fresh shell with the separate
+  process-startup form `herdr pane run <pane-id> <command>...`; this is not the
+  ordinary-pane quoted handoff seam.
 - If Codex blocks before reading this brief and asks whether to trust the working
   directory, classify the target as `blocked`, never `working`. Verify the exact
   cwd, expected Git remote, branch, and task scope first. Approve trust only for
@@ -82,18 +95,20 @@ services, and irreversible operations require explicit authorization.
 ### Completed worker cleanup
 
 - After atomically writing `report.md` or `review.md`, sending exactly one
-  native completion handoff, and stopping work, the worker must not close,
-  manipulate, or reuse its pane. A worker also must not open a subagent,
-  background agent, watcher, second CLI, extra pane/tab, headless task, or
-  self-dispatch path.
+  applicable atomic completion handoff—native `herdr agent prompt` for a
+  recognized live agent or ordinary-pane `herdr pane run <target-pane>
+  "<message>"`—and stopping work, the worker must not close, manipulate, or
+  reuse its pane. A worker also must not open a subagent, background agent,
+  watcher, second CLI, extra pane/tab, headless task, or self-dispatch path.
 - The coordinator performs exactly one bounded liveness check. Only after it
   confirms that the old turn cannot still run or hold an uncommitted tool
   operation does the coordinator close the completed worker CLI/pane with
   `herdr pane close <pane-id>` (or the current equivalent) to release memory.
 - Completed subtasks are closed by default, not retained as idle panes. Reuse
   is allowed only for an unfinished or safely reset context under a new
-  coordinator dispatch. If handoff fails, record the failure and let the
-  coordinator choose safe close/recovery; do not resend or leave a watcher.
+  coordinator dispatch. If the selected native or ordinary-pane atomic handoff
+  fails, record the failure and let the coordinator choose safe close/recovery;
+  do not resend or leave a watcher.
 
 ## Profile instructions
 
@@ -126,13 +141,16 @@ Worker completion is not coordinator acceptance.
 - Write the required artifact to `${artifact_path}`. Prefer a temporary file in
   the same directory, validate it, and atomically rename it into place.
 - Finish the artifact with the exact marker `${completion_marker}`.
-- After the artifact and marker are complete, send exactly one short native prompt
-  to `${handoff_target}`:
+- After the artifact and marker are complete, send exactly one applicable atomic
+  handoff to `${handoff_target}`: use the native `herdr agent prompt` form when
+  the target is a genuinely recognized live agent, or the ordinary-pane
+  `herdr pane run <target-pane> "<message>"` form otherwise:
   `Task ${task_id}: artifact ${artifact_path}; marker ${completion_marker}.
   Please continue coordinator acceptance.`
 - Do not poll for completion, inspect a transcript in a loop, run a background
-  watcher, send a second Enter, or blindly resend the handoff. If the handoff
-  fails, record that fact in the artifact and make no delivery claim.
+  watcher, send a second Enter, or blindly resend the handoff. If the selected
+  native or ordinary-pane atomic handoff fails, record that fact in the artifact
+  and make no delivery claim.
 
 ## Completion marker
 

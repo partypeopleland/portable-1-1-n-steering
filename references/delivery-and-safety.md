@@ -21,9 +21,10 @@
 ## Artifact-first direct handoff
 
 - Worker 先在 artifact 同一目錄建立 temp 檔，寫入完整 report/review、命令結果、限制與 completion marker，再 atomic rename 至正式 path。
-- Native recognized agent 的唯一預設交接 seam 是 `herdr agent prompt <coordinator-name-or-pane-id> "..."`；訊息只含 task ID、精確 artifact path、marker 與請 coordinator acceptance 的指示。
-- 不使用 completion polling、transcript loop、background watcher、第二次 Enter 或 blind resend。`herdr pane send-text`／`send-keys Enter` 只可作明確標記的 raw-terminal compatibility fallback。
-- Native handoff 失敗必須在 artifact 如實記錄，不能聲稱 coordinator 已收到；worker 停止發 work 且不得 close／操作 pane，讓 coordinator 做一次 bounded liveness check 後決定安全 close/recovery。確認舊 turn 不再執行且沒有未提交 tool operation 後，coordinator 以 `herdr pane close <pane-id>`（或當前等價命令）關閉 completed worker CLI/pane；完成 pane 預設不保留為 idle，重用只適用於未完成或已安全 reset 的 context。
+- 「跨視窗交接資訊」包括 coordinator-to-worker assignments、worker-to-coordinator completion handoffs，以及 coordinator-to-worker correction/review handoffs。目標是 ordinary interactive pane 時，三類資訊都使用一次 atomic `herdr pane run <target-pane> "<message>"`；目標是真正已辨識且可用的 live agent 時，保留 `herdr agent prompt <coordinator-name-or-pane-id> "<message>"` 作 recognized-agent seam。
+- `herdr pane run <target-pane> "<message>"` 是已存在 ordinary pane 的 handoff transport，不是 shell startup、readiness、completion 或 runtime verification；shell/process startup 的 `herdr pane run <pane-id> <command>...` 形式另行處理。
+- 不使用 completion polling、transcript loop、background watcher、第二次 Enter 或 blind resend。普通 pane 不得以 `pane send-text`／`send-keys Enter` 作正常路徑；只有 atomic/native seam 都不可用時，才可明確標記 raw-terminal compatibility recovery，將 split pair at-most-once 嘗試並在 artifact/report 記錄失敗。
+- 若選定的 native `herdr agent prompt` 或 ordinary-pane atomic `herdr pane run` handoff 失敗，必須在 artifact 如實記錄，不能聲稱 coordinator 已收到；worker 停止發 work 且不得 close／操作 pane，讓 coordinator 做一次 bounded liveness check 後決定安全 close/recovery。確認舊 turn 不再執行且沒有未提交 tool operation 後，coordinator 以 `herdr pane close <pane-id>`（或當前等價命令）關閉 completed worker CLI/pane；完成 pane 預設不保留為 idle，重用只適用於未完成或已安全 reset 的 context。
 
 ## Coordinator evidence boundary
 
