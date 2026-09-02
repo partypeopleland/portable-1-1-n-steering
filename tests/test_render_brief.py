@@ -79,6 +79,22 @@ class RenderBriefTests(unittest.TestCase):
         self.assertIn(".coordination/tasks/test-task-01/review.md", rendered)
         self.assertIn("REVIEW_COMPLETE", rendered)
 
+    def test_rendered_brief_pins_handoff_preflight_and_transport(self):
+        rendered = RENDERER.render_brief(metadata())
+        expected_phrases = (
+            "the coordinator must inspect the current Herdr",
+            "resolve one actually supported assignment/completion transport",
+            "plus the exact coordinator target",
+            "do not leave candidate commands",
+            "If the CLI lacks",
+            "`agent prompt`, select the ordinary-pane atomic `pane run` seam before dispatch.",
+            "using the exact transport and target resolved\n  by the coordinator before dispatch",
+            "Do not probe alternative Herdr subcommands\n  at completion time",
+        )
+        for phrase in expected_phrases:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, rendered)
+
     def test_missing_required_values_fail_strictly(self):
         cases = []
         missing_objective = metadata()

@@ -40,6 +40,12 @@
 2. worker → coordinator completion handoff；
 3. coordinator → worker correction／review handoff。
 
+Coordinator 在 dispatch 前 MUST 先讀取 current Herdr CLI help，解析一個實際支援的
+assignment／completion transport 與精確 coordinator target，並將這個已解析的 transport
+和 target 寫入 task-specific brief；不得把候選 subcommand 留給 worker 在完成 artifact
+後探測。若 CLI 沒有 `agent prompt`，必須在 dispatch 前選定 ordinary-pane atomic
+`herdr pane run <target-pane> "<message>"` seam。
+
 | 目標 | 正常 transport | 禁止混淆 |
 | --- | --- | --- |
 | Herdr 已辨識且可用的 live agent | `herdr agent prompt <agent-or-pane> "<message>"` | 不把 pane label 當成 native agent identity |
@@ -55,8 +61,8 @@
 ### Coordinator
 
 1. 建立 brief：目標、範圍、排除項、allowed mutations、checks、artifact path、completion marker。
-2. 只在 ready、idle、沒有其他 turn 的可見 pane 派工。
-3. 需要修正時使用同一套 atomic handoff transport；不另開重複任務。
+2. 在 dispatch 前完成 CLI-help preflight，並將 resolved transport 與 coordinator target 寫入 brief；只在 ready、idle、沒有其他 turn 的可見 pane 派工。
+3. 需要修正時使用同一套已解析的 atomic handoff transport；不另開重複任務，也不讓 worker 探測替代 subcommand。
 4. 收到 handoff 後做一次 bounded liveness check，再關閉已完成 worker pane。
 5. 讀取 report／review，核對 diff、測試、限制、敏感資訊和 runtime boundary。
 

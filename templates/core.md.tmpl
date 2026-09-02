@@ -46,6 +46,12 @@ services, and irreversible operations require explicit authorization.
 worker-to-coordinator completion handoffs, and coordinator-to-worker
 correction/review handoffs.
 
+- Before rendering this brief, the coordinator must inspect the current Herdr
+  CLI help and resolve one actually supported assignment/completion transport
+  plus the exact coordinator target. The rendered task-specific handoff section
+  must name that resolved transport and target; do not leave candidate commands
+  for the worker to probe after it has completed the artifact. If the CLI lacks
+  `agent prompt`, select the ordinary-pane atomic `pane run` seam before dispatch.
 - For an ordinary interactive pane, each of the three message classes uses exactly one
   atomic `herdr pane run <target-pane> "<message>"` handoff.
 - The quoted-message form submits handoff information to an existing pane; it
@@ -142,9 +148,9 @@ Worker completion is not coordinator acceptance.
   the same directory, validate it, and atomically rename it into place.
 - Finish the artifact with the exact marker `${completion_marker}`.
 - After the artifact and marker are complete, send exactly one applicable atomic
-  handoff to `${handoff_target}`: use the native `herdr agent prompt` form when
-  the target is a genuinely recognized live agent, or the ordinary-pane
-  `herdr pane run <target-pane> "<message>"` form otherwise:
+  handoff to `${handoff_target}` using the exact transport and target resolved
+  by the coordinator before dispatch. Do not probe alternative Herdr subcommands
+  at completion time:
   `Task ${task_id}: artifact ${artifact_path}; marker ${completion_marker}.
   Please continue coordinator acceptance.`
 - Do not poll for completion, inspect a transcript in a loop, run a background

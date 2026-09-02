@@ -22,6 +22,10 @@ description: Orchestrate multi-agent coordinator-worker collaboration using the 
 
 ## Native dispatch 與 at-most-once 交接
 
+- Coordinator 必須在 dispatch 前用 current Herdr CLI help 解析實際可用的 assignment／completion
+  transport 與精確 coordinator target，並直接寫入 brief；不得把候選命令留給 worker 在完成後
+  才探測。若 CLI 沒有 `agent prompt`，brief 一開始就指定 ordinary coordinator pane 的 atomic
+  `pane run` seam。
 - 「跨視窗交接資訊」明確包括 coordinator-to-worker assignments、worker-to-coordinator completion handoffs，以及 coordinator-to-worker correction/review handoffs。
 - 當目標是 ordinary interactive pane 時，上述三類資訊每一項都使用一次 atomic
   `herdr pane run <target-pane> "<message>"` seam。這個 quoted-message 形式只把

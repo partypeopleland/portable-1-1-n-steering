@@ -137,7 +137,8 @@ Worker 必須先把 artifact 寫好並完成 marker，再 handoff：
    herdr pane run <target-pane> "Task <task-id>: artifact <exact-path>; marker <MARKER>. Please continue coordinator acceptance."
    ```
 
-Native prompt 不使用 `--wait`，也不再補 Enter；pane handoff 也只送一次。任一成功 API
+使用 coordinator 在 dispatch 前解析並寫入 brief 的 exact transport 與 target；worker 不得在
+完成時探測其他 Herdr handoff subcommand。Native prompt 不使用 `--wait`，也不再補 Enter；pane handoff 也只送一次。任一成功 API
 write 都不是 coordinator 已讀取、worker 已處理或 runtime 已驗證的證明，因此不要查詢回覆、
 輪詢、重送文字或建立 acknowledgement loop。若選定的 atomic seam 失敗，在 artifact
 如實記錄失敗；不得改用第二次 Enter 或靜默宣稱 coordinator 已收到。
