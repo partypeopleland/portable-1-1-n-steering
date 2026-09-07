@@ -7,6 +7,7 @@ import ast
 import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 import unittest
@@ -19,6 +20,26 @@ BOUNDED_PROCESS_PATH = ROOT / "scripts" / "bounded_process.py"
 SMOKE_ENTRYPOINT = ROOT / "scripts" / "smoke_installed_package.py"
 INSTALLER = ROOT / "install.sh"
 TEST_SOURCE = Path(__file__).resolve()
+PUBLIC_TEXT_FILES = (
+    ROOT / "README.md",
+    ROOT / "SKILL.md",
+    ROOT / "docs" / "README.md",
+    ROOT / "docs" / "ai-runbook.md",
+    ROOT / "install.sh",
+    *(ROOT / "references").glob("*.md"),
+    *(ROOT / "profiles").glob("*.json"),
+    *(ROOT / "templates").glob("*.json"),
+    ROOT / "templates" / "core.md.tmpl",
+    *(ROOT / "scripts").glob("*.py"),
+)
+PUBLIC_MARKDOWN_FILES = (
+    ROOT / "README.md",
+    ROOT / "SKILL.md",
+    ROOT / "docs" / "README.md",
+    ROOT / "docs" / "ai-runbook.md",
+    *(ROOT / "references").glob("*.md"),
+    ROOT / "templates" / "core.md.tmpl",
+)
 
 
 def load_module(module_name: str, path: Path):
@@ -89,11 +110,112 @@ class RenderBriefTests(unittest.TestCase):
             "If the CLI lacks",
             "`agent prompt`, select the ordinary-pane atomic `pane run` seam before dispatch.",
             "using the exact transport and target resolved\n  by the coordinator before dispatch",
-            "Do not probe alternative Herdr subcommands\n  at completion time",
+            "Do not probe alternative Herdr subcommands",
         )
         for phrase in expected_phrases:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, rendered)
+
+    def test_remote_runbook_keeps_handoff_preflight_route(self):
+        runbook = (ROOT / "docs" / "ai-runbook.md").read_text(encoding="utf-8")
+        for phrase in (
+            "current Herdr CLI help",
+            "精確 coordinator target",
+            "不得把候選 subcommand",
+            "ordinary-pane atomic `herdr pane run",
+            "lifecycle-and-handoff.md",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, runbook)
+
+    def test_public_guidance_is_provider_neutral_and_wrappers_route(self):
+        forbidden = re.compile(
+            r"(?i)\bgpt-[0-9]|\bluna\b|\bastra\b|/home/art\b|"
+            r"\b[0-9]+(?:\.[0-9]+)?%|(?:session|pane)[ _-]?id\s*[:=]"
+        )
+        for path in PUBLIC_TEXT_FILES:
+            with self.subTest(path=path):
+                self.assertTrue(path.is_file(), path)
+                self.assertIsNone(forbidden.search(path.read_text(encoding="utf-8")))
+
+        wrappers = (ROOT / "README.md", ROOT / "SKILL.md")
+        for path in wrappers:
+            with self.subTest(wrapper=path):
+                source = path.read_text(encoding="utf-8")
+                for active_rule in (
+                    "herdr agent prompt",
+                    "herdr pane send-text",
+                    "herdr pane close",
+                    "bounded liveness",
+                ):
+                    self.assertNotIn(active_rule, source)
+
+        lifecycle = (ROOT / "references" / "lifecycle-and-handoff.md").read_text(encoding="utf-8")
+        delivery = (ROOT / "references" / "delivery-and-safety.md").read_text(encoding="utf-8")
+        roles = (ROOT / "references" / "roles-and-gates.md").read_text(encoding="utf-8")
+        template = (ROOT / "templates" / "core.md.tmpl").read_text(encoding="utf-8")
+        for marker in (
+            "herdr agent prompt",
+            "herdr pane send-text",
+            "bounded liveness",
+            "poll",
+            "herdr pane close",
+            "rename",
+            "handoff_failed",
+        ):
+            with self.subTest(canonical_marker=marker):
+                self.assertIn(marker, lifecycle)
+                self.assertIn(marker, template)
+        for marker in (
+            "resource checkpoint",
+            "metadata key",
+            "Git history",
+            "force push",
+        ):
+            with self.subTest(delivery_marker=marker):
+                self.assertIn(marker, delivery)
+                self.assertIn(marker, template if marker != "force push" else template)
+        self.assertIn("capability", roles)
+        self.assertIn("lifecycle-and-handoff.md", roles)
+        for path in (
+            ROOT / "references" / "roles-and-gates.md",
+            ROOT / "references" / "delivery-and-safety.md",
+        ):
+            source = path.read_text(encoding="utf-8")
+            self.assertNotIn("herdr agent prompt", source)
+            self.assertNotIn("herdr pane send-text", source)
+            self.assertNotIn("herdr pane close", source)
+
+    def test_public_markdown_links_and_fences_are_closed(self):
+        link_pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+        for path in PUBLIC_MARKDOWN_FILES:
+            with self.subTest(path=path):
+                source = path.read_text(encoding="utf-8")
+                self.assertEqual(source.count("```") % 2, 0)
+                self.assertFalse(any(line.rstrip() != line for line in source.splitlines()))
+                for target in link_pattern.findall(source):
+                    if target.startswith(("#", "http://", "https://", "mailto:")):
+                        continue
+                    target_path = (path.parent / target.split("#", 1)[0]).resolve()
+                    self.assertTrue(target_path.is_file(), f"{path}: {target}")
+
+    def test_rendered_profiles_keep_the_safety_contract(self):
+        semantic_markers = (
+            "herdr agent prompt",
+            "pane send-text",
+            "bounded liveness",
+            "poll",
+            "pane close",
+            "rename",
+            "resource checkpoint",
+            "Git history",
+            "coordinator acceptance",
+        )
+        for profile in ("developer", "reviewer", "investigation", "design"):
+            rendered = RENDERER.render_brief(metadata(profile))
+            with self.subTest(profile=profile):
+                for marker in semantic_markers:
+                    self.assertIn(marker, rendered)
 
     def test_missing_required_values_fail_strictly(self):
         cases = []

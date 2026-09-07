@@ -1,3 +1,11 @@
+<!--
+This is a rendered safety contract, not a second normative source. The
+normative domains are references/roles-and-gates.md,
+references/lifecycle-and-handoff.md, and references/delivery-and-safety.md.
+Package tests assert that the stable lifecycle and safety markers below remain
+present in every rendered profile.
+-->
+
 # Task brief: ${objective}
 
 ## Identification and authorization
@@ -77,12 +85,18 @@ correction/review handoffs.
 - For a new ready shell whose readiness is reliable, use
   `herdr agent start <name> --kind <kind> --pane <id>`, then prompt the named
   agent through the native seam.
+- For an ordinary shell or process, use the separate process-startup form
+  `herdr pane run <pane-id> <command>...`; this is not the ordinary-pane quoted
+  handoff seam.
+
+### First-run startup recovery and trust
+
 - If first-run bootstrap auto-updates and exits after a misleading ready signal,
   classify the target as `startup_failed`; do not prompt the stale target. Allow
   the update to finish and perform one bounded clean restart. If native startup
   remains unavailable, launch the CLI from a fresh shell with the separate
-  process-startup form `herdr pane run <pane-id> <command>...`; this is not the
-  ordinary-pane quoted handoff seam.
+  process-startup form above and rely on proactive artifact handoff rather than
+  coordinator polling.
 - If Codex blocks before reading this brief and asks whether to trust the working
   directory, classify the target as `blocked`, never `working`. Verify the exact
   cwd, expected Git remote, branch, and task scope first. Approve trust only for
@@ -98,6 +112,22 @@ correction/review handoffs.
   create or start a fresh pane. Never assign work while an old turn may still be
   running. This preserves context/token isolation and at-most-once execution.
 
+### Bounded anomaly recovery
+
+- A trust or approval prompt is `blocked`, not `working`; verify the exact cwd,
+  remote, branch, and scope before approving it.
+- A first-run bootstrap that exits after updating is `startup_failed`; perform
+  one bounded clean restart, then stop native retry if readiness is still absent.
+- A startup acknowledgement timeout permits one bounded inspection and, only
+  when the seam proves that text is unsubmitted, one seam-specific submit
+  action. Never resend the assignment text; record `dispatch_failed` after the
+  bounded recovery fails.
+- A missed progress deadline gets one liveness audit and one recovery
+  instruction or failure record. A failed handoff is recorded in the artifact
+  as `handoff_failed` when applicable and is never blindly resent. An `idle`,
+  `done`, or `unknown` target without
+  a completion handoff is an anomaly, not permission to reassign.
+
 ### Completed worker cleanup
 
 - After atomically writing `report.md` or `review.md`, sending exactly one
@@ -112,9 +142,8 @@ correction/review handoffs.
   `herdr pane close <pane-id>` (or the current equivalent) to release memory.
 - Completed subtasks are closed by default, not retained as idle panes. Reuse
   is allowed only for an unfinished or safely reset context under a new
-  coordinator dispatch. If the selected native or ordinary-pane atomic handoff
-  fails, record the failure and let the coordinator choose safe close/recovery;
-  do not resend or leave a watcher.
+  coordinator dispatch. If handoff fails, record the failure and let the
+  coordinator choose safe close/recovery; do not resend or leave a watcher.
 
 ## Profile instructions
 
@@ -142,15 +171,32 @@ The coordinator must independently verify scope, diff, checks, documentation
 synchronization, sensitive-information safety, and any required runtime evidence.
 Worker completion is not coordinator acceptance.
 
+## Safety boundaries
+
+- A brief may declare an optional provider-neutral resource checkpoint in prose.
+  At a safe boundary, finish the artifact atomically, record completed and
+  remaining work, stop new work, and let the coordinator re-enter the ready
+  gate. This adds no metadata key, profile field, renderer behavior, daemon,
+  watcher, second CLI, or automatic resume, and does not assert that a resource
+  signal has reset or that acceptance has passed.
+- Do not rewrite Git history or bypass the publication gate with `merge`,
+  `rebase`, `amend`, `reset`, force push, or tag. Source-only and offline
+  evidence is not deployed or runtime-verified evidence.
+
 ## Artifact-first completion and handoff
 
 - Write the required artifact to `${artifact_path}`. Prefer a temporary file in
   the same directory, validate it, and atomically rename it into place.
 - Finish the artifact with the exact marker `${completion_marker}`.
+- Before dispatch, the coordinator must record the resolved handoff transport
+  and exact target in this task-specific brief. The rendered target is
+  `${handoff_target}`. Do not probe alternative Herdr subcommands at completion
+  time.
+- Task-specific preflight note:
+  ${notes}
 - After the artifact and marker are complete, send exactly one applicable atomic
-  handoff to `${handoff_target}` using the exact transport and target resolved
-  by the coordinator before dispatch. Do not probe alternative Herdr subcommands
-  at completion time:
+  handoff using the exact transport and target resolved
+  by the coordinator before dispatch:
   `Task ${task_id}: artifact ${artifact_path}; marker ${completion_marker}.
   Please continue coordinator acceptance.`
 - Do not poll for completion, inspect a transcript in a loop, run a background
