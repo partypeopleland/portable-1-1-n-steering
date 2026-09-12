@@ -19,7 +19,8 @@ or permission problem is a safe stop.
 
 ## Close and publish
 
-`report.md` records commands and results, tests, precise diff, limitations, rollback,
+`report.md` records the selected risk tier/mode and rationale, every reviewer dispatch/review,
+commands and results, tests, precise diff, limitations, rollback,
 unfinished work, and status markers. The main window performs one bounded acceptance
 check against plan, review, workspace, and required runtime evidence.
 

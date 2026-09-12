@@ -1,15 +1,18 @@
 ---
 name: plan-gated-execution
-description: Require a written plan and an independent high-capability, read-only subagent LGTM before substantive implementation, debugging, design, documentation, tests, deployment, or external mutation; then let the main task window execute and accept the scoped work.
+description: Require a written plan and an independent review gate before substantive implementation, debugging, design, documentation, tests, deployment, or external mutation; choose a frontier reviewer or a multi-reviewer fallback by risk, then let the main task window execute and accept the scoped work.
 ---
 
 # Plan-Gated Execution
 
 這個 Skill 要求主工作視窗在實質工作前建立 task-local `plan.md`，固定 revision／SHA-256，
-再自行呼叫一名獨立高能力 subagent 只做計畫審核。預設 validator 只接受可核對的
-`gpt-6-astra` 或 `gpt-5.6-sol`；其他更高模型需先完成獨立 allowlist review，並在獨立
-artifact 以零 blocker／high finding 回覆精確 `LGTM`；否則
-主視窗不得執行 substantive mutation。
+先依風險選擇 review mode，再呼叫獨立 read-only reviewer。高風險或風險未知需要
+frontier reviewer；低／中風險在 frontier 不可用時，至少要有兩個不同 identity／provider
+的核准 fallback reviewer。Host 可用的 fallback adapter 是 `agy`（`gemini-3.8-flash-high`）與
+`devin`（`swe-2-high`／`SWE-2 high`）。
+若主工作視窗無法判斷風險或能力等價性，必須回問 Owner；不能猜測或以單一弱 reviewer
+代替。所有 reviewer 都要在獨立 artifact 以零 blocker／high finding 回覆精確 `LGTM`，
+否則主視窗不得執行 substantive mutation。
 
 完整 normative rules：
 

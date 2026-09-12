@@ -18,6 +18,9 @@ REQUIRED = (
     "revision",
     "owner_authorization",
     "objective",
+    "risk_tier",
+    "review_mode",
+    "review_rationale",
     "scope",
     "exclusions",
     "sources",
@@ -30,6 +33,8 @@ REQUIRED = (
     "acceptance",
 )
 ALLOWED = frozenset(REQUIRED)
+RISK_TIERS = frozenset({"low", "medium", "high", "unknown"})
+REVIEW_MODES = frozenset({"frontier-single", "dual-fallback", "owner-choice"})
 TASK_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")
 PLACEHOLDER = re.compile(r"\$\{[^}]+\}|\$[A-Za-z_][A-Za-z0-9_]*")
 CREDENTIAL = re.compile(
@@ -84,11 +89,20 @@ def normalize(metadata: Any) -> dict[str, Any]:
         raise PlanError("revision must be positive")
     if isinstance(revision, str):
         revision = _text(revision, "revision")
+    risk_tier = _text(metadata["risk_tier"], "risk_tier")
+    if risk_tier not in RISK_TIERS:
+        raise PlanError("risk_tier must be low, medium, high, or unknown")
+    review_mode = _text(metadata["review_mode"], "review_mode")
+    if review_mode not in REVIEW_MODES:
+        raise PlanError("review_mode must be frontier-single, dual-fallback, or owner-choice")
     return {
         "task_id": task_id,
         "revision": revision,
         "owner_authorization": _text(metadata["owner_authorization"], "owner_authorization"),
         "objective": _text(metadata["objective"], "objective"),
+        "risk_tier": risk_tier,
+        "review_mode": review_mode,
+        "review_rationale": _text(metadata["review_rationale"], "review_rationale"),
         "scope": _items(metadata["scope"], "scope"),
         "exclusions": _items(metadata["exclusions"], "exclusions"),
         "sources": _items(metadata["sources"], "sources"),
@@ -126,6 +140,9 @@ def render_plan(metadata: Any) -> str:
         f"- task_id: `{values['task_id']}`",
         f"- revision: `{values['revision']}`",
         f"- owner_authorization: {values['owner_authorization']}",
+        f"- risk_tier: `{values['risk_tier']}`",
+        f"- review_mode: `{values['review_mode']}`",
+        f"- review_rationale: {values['review_rationale']}",
         "",
     ]
     for title, items in sections:

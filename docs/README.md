@@ -9,8 +9,8 @@ repository 根目錄的 `README.md`。
 2. 讀取本 package 的 `SKILL.md`，確認是否屬 substantive work。
 3. 讀取 [`ai-runbook.md`](ai-runbook.md)，取得 plan、review 與 close 的決策規則。
 4. 依任務需要讀取 `../references/` 下的詳細規則。
-5. 建立並鎖定 task-local `plan.md`，再呼叫獨立 reviewer；缺少授權、來源或 review evidence
-   時停止，不要猜測。
+5. 建立並鎖定 task-local `plan.md`，先選擇 review mode，再呼叫所需的獨立 reviewer；
+   缺少授權、來源或 review evidence 時停止，不要猜測。
 
 ## 文件角色
 
