@@ -1,0 +1,16 @@
+{
+  "task_id": "example-plan-01",
+  "revision": 1,
+  "owner_authorization": "approved change request",
+  "objective": "Add a small, tested parser seam.",
+  "scope": ["src/parser.py", "tests/test_parser.py"],
+  "exclusions": ["deployment", "credentials"],
+  "sources": ["canonical product brief", "module documentation"],
+  "dependencies": ["the approved interface remains stable"],
+  "steps": ["implement the seam", "add deterministic tests", "inspect the diff"],
+  "risk_and_authority": ["source and tests only; no external mutation"],
+  "validation": ["python3 -m unittest discover -s tests"],
+  "rollback": ["restore the listed files from the pre-change snapshot"],
+  "deliverables": [".coordination/tasks/example-plan-01/plan.md", "report.md"],
+  "acceptance": ["main window verifies the scoped diff and test evidence"]
+}
